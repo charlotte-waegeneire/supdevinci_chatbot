@@ -1,26 +1,66 @@
-# -*- coding: utf-8 -*-
-"""
-chatbot/agents/doc_agent.py
-
-Agent Documentation (RAG) pour "vChatbot SupdeVinci".
-Ce module utilise LangChain Community + Chroma via langchain-chroma pour répondre
-à partir d'une base documentaire (PDFs, règlements, brochures),
-avec optimisation des appels LLM pour limiter les coûts.
-"""
 import os
-from dotenv import load_dotenv
+from typing import Optional
 
-# Mise à jour des imports vers langchain-community
-from langchain_community.document_loaders import PyPDFDirectoryLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
-# from langchain_community.llms import OpenAI
-from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
+from langchain.llms.base import LLM
+from langchain_chroma import Chroma
+from langchain_community.document_loaders import PyPDFDirectoryLoader
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from openai import AzureOpenAI
+from pydantic import Field
 
-# Charger les variables d'environnement depuis le fichier .env
-load_dotenv()
+from chatbot.utils import get_env_variable
+
+
+class AzureOpenAILLM(LLM):
+    """Custom LangChain LLM wrapper for Azure OpenAI"""
+
+    azure_endpoint: str = Field(...)
+    api_key: str = Field(...)
+    deployment: str = Field(...)
+    api_version: str = Field(default="2024-12-01-preview")
+    temperature: float = Field(default=0.0)
+    max_tokens: int = Field(default=512)
+
+    _client: Optional[AzureOpenAI] = None
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._client = AzureOpenAI(
+            api_version=self.api_version,
+            azure_endpoint=self.azure_endpoint,
+            api_key=self.api_key,
+        )
+
+    @property
+    def _llm_type(self) -> str:
+        return "azure_openai"
+
+    def _call(
+        self,
+        prompt: str,
+        stop: Optional[list[str]] = None,
+    ) -> str:
+        """Call Azure OpenAI API"""
+        response = self._client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that answers questions based on the provided context.",
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
+            max_tokens=self.max_tokens,
+            temperature=self.temperature,
+            model=self.deployment,
+            stop=stop,
+        )
+        return response.choices[0].message.content
+
 
 class DocAgent:
     def __init__(
@@ -28,17 +68,15 @@ class DocAgent:
         docs_path: str = "chatbot/data/documents",
         persist_directory: str = "chatbot/data/vectorstore",
         embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
-        llm_model_name: str = "gpt-3.5-turbo",
+        llm_deployment: str = "gpt-4o-mini",
         retrieval_k: int = 3,
         max_response_tokens: int = 512,
     ):
         """
-        Initialise le DocAgent.
+        Initialise le DocAgent avec Azure OpenAI.
         - Charge/crée le vectorstore Chroma via langchain-chroma
         - Configure le modèle d'embedding HuggingFace
-        - Prépare le chain RetrievalQA en limitant le nombre de chunks retournés
-          et la longueur max de la réponse pour maîtriser la consommation de tokens.
-        - Supporte Azure OpenAI si les variables d'env sont fournies.
+        - Prépare le chain RetrievalQA avec Azure OpenAI
         """
         self.docs_path = docs_path
         self.persist_directory = persist_directory
@@ -59,22 +97,23 @@ class DocAgent:
         else:
             self.db = self._build_vectorstore()
 
-        # Chargement des variables Azure/OpenAI
-        openai_api_key = os.getenv("OPENAI_API_KEY")
-        openai_api_base = os.getenv("OPENAI_ENDPOINT")
+        azure_endpoint = get_env_variable("AZURE_OPENAI_ENDPOINT")
+        api_key = get_env_variable("AZURE_OPENAI_API_KEY")
+        api_version = get_env_variable("AZURE_OPENAI_API_VERSION")
 
-        print(openai_api_base)
-
-        if not openai_api_key or not openai_api_base:
+        if not azure_endpoint or not api_key:
             raise ValueError(
-                "Les variables d'environnement OPENAI_API_KEY et OPENAI_ENDPOINT doivent être définies."
+                "Les variables d'environnement AZURE_OPENAI_ENDPOINT et AZURE_OPENAI_API_KEY doivent être définies."
             )
 
-                # LLM pour la génération de réponses, support Azure OpenAI
-        # On utilise le nom de déploiement plutôt que model_name pour Azure
-        self.llm = ChatOpenAI(
-            openai_api_base=openai_api_base,
-            openai_api_key=openai_api_key,
+        print(f"Utilisation d'Azure OpenAI - Endpoint: {azure_endpoint}")
+
+        # LLM Azure OpenAI personnalisé
+        self.llm = AzureOpenAILLM(
+            azure_endpoint=azure_endpoint,
+            api_key=api_key,
+            deployment=llm_deployment,
+            api_version=api_version,
             temperature=0,
             max_tokens=self.max_response_tokens,
         )
@@ -94,7 +133,9 @@ class DocAgent:
         loader = PyPDFDirectoryLoader(self.docs_path)
         docs = loader.load()
         if not docs:
-            raise FileNotFoundError(f"Aucun PDF trouvé dans {self.docs_path}. Vérifiez le chemin et les fichiers .pdf.")
+            raise FileNotFoundError(
+                f"Aucun PDF trouvé dans {self.docs_path}. Vérifiez le chemin et les fichiers .pdf."
+            )
         print(f"Documents chargés : {len(docs)}")
 
         # Découpage en chunks pour optimiser la recherche
@@ -104,11 +145,15 @@ class DocAgent:
         )
         texts = splitter.split_documents(docs)
         if not texts:
-            raise ValueError("Le découpage des documents a produit 0 chunks. Vérifiez le contenu des PDF.")
+            raise ValueError(
+                "Le découpage des documents a produit 0 chunks. Vérifiez le contenu des PDF."
+            )
         print(f"Chunks créés : {len(texts)}")
 
         # Création du vectorstore via from_documents
-        print("Construction du vectorstore Chroma... (cela peut prendre quelques instants)")
+        print(
+            "Construction du vectorstore Chroma... (cela peut prendre quelques instants)"
+        )
         vectordb = Chroma.from_documents(
             documents=texts,
             embedding=self.embeddings,
@@ -126,9 +171,11 @@ class DocAgent:
         # Utilisation de run bien que dépréciée, pour compatibilité immédiate
         return self.qa_chain.run(question)
 
+
 if __name__ == "__main__":
-    # Exemple d'utilisation
-    agent = DocAgent()
-    print(agent.query(
-        "Comment être admis à la formation Mastère Big Data & IA de Sup de Vinci ?"
-    ))
+    agent = DocAgent(llm_deployment="gpt-4o-mini")
+    print(
+        agent.query(
+            "Comment être admis à la formation Mastère Big Data de Sup de Vinci ?"
+        )
+    )
