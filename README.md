@@ -34,6 +34,64 @@ The system follows a multi-agent architecture:
 - **Document Agent**: Answers questions using RAG on institutional documents (PDFs, guides, regulations)
 - **Action Agent**: Collects user information through intelligent forms and exports to Excel
 
+## 🛠️ Development Setup
+
+### Prerequisites
+- Python 3.8+
+- Git
+
+### Quick Setup
+```bash
+# Clone the repository
+git clone <repository-url>
+cd supdevinci_chatbot
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Setup development environment (installs deps + pre-commit hooks)
+make setup-dev
+```
+
+### Development Commands
+```bash
+# Show all available commands
+make help
+
+# Run linting
+make lint
+
+# Run linting with auto-fix
+make lint-fix
+
+# Format code
+make format
+
+# Run all checks
+make check
+
+# Run the app
+make run
+
+# Clean cache files
+make clean
+```
+
+### Code Quality
+This project uses **Ruff** for linting and formatting, configured to run automatically on every commit via pre-commit hooks.
+
+- **Automatic**: Ruff runs on every `git commit`
+- **Manual**: Use `make lint-fix` and `make format`
+- **Skip hooks**: Use `git commit --no-verify` (not recommended)
+
+The configuration includes:
+- Code formatting (Black-compatible)
+- Import sorting (isort)
+- Security checks (bandit)
+- Performance optimizations
+- PEP 8 compliance
+
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
