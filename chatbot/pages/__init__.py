@@ -1,3 +1,1 @@
-from .home import home
-
-__all__ = ["home"]
+"""Pages package initialization."""
