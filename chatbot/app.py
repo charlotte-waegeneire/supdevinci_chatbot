@@ -1,14 +1,9 @@
 """Main Sup de Vinci chatbot application."""
 
+from pages.chatbot import show_chatbot
+from pages.form import show_form
+from pages.home import show_home
 import streamlit as st
-
-try:
-    from pages.chatbot import show_chatbot
-    from pages.form import show_form
-    from pages.home import show_home
-except ImportError as import_error:
-    st.error(f"Erreur d'import : {import_error}")
-    st.stop()
 
 
 def main():
