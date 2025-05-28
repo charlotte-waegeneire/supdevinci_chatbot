@@ -1,22 +1,23 @@
 import os
 from typing import List
-from dotenv import load_dotenv
+
+from langchain.chains import RetrievalQA
+from langchain.prompts import PromptTemplate
+from langchain.schema import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
-from langchain.chains import RetrievalQA
 from langchain_openai import AzureChatOpenAI
-from langchain.prompts import PromptTemplate
 
-load_dotenv()
+from chatbot.utils import get_env_variable
+
 
 class WebAgent:
     def __init__(
         self,
         data_folder: str = "chatbot/data/website_pages/",
         persist_directory: str = "chatbot/data/vectorstore/supdevinci_web/",
-        embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+        embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
     ) -> None:
         self.data_folder = data_folder
         self.persist_directory = persist_directory
@@ -56,16 +57,18 @@ class WebAgent:
                 {context}
 
                 Question : {question}
-            """.strip()
+            """.strip(),
         )
 
         if os.path.exists(persist_directory) and os.listdir(persist_directory):
-            self.db = Chroma(persist_directory=persist_directory, embedding_function=self.embeddings)
+            self.db = Chroma(
+                persist_directory=persist_directory, embedding_function=self.embeddings
+            )
         else:
             self.db = Chroma.from_documents(
                 self._load_documents(),
                 self.embeddings,
-                persist_directory=persist_directory
+                persist_directory=persist_directory,
             )
 
         self._setup_llm()
@@ -76,31 +79,42 @@ class WebAgent:
 
         for filename in os.listdir(self.data_folder):
             if filename.endswith((".md", ".txt")):
-                with open(os.path.join(self.data_folder, filename), "r", encoding="utf-8") as f:
+                with open(
+                    os.path.join(self.data_folder, filename), encoding="utf-8"
+                ) as f:
                     chunks = splitter.split_text(f.read())
-                    docs.extend([Document(page_content=c, metadata={"source": filename}) for c in chunks])
+                    docs.extend(
+                        [
+                            Document(page_content=c, metadata={"source": filename})
+                            for c in chunks
+                        ]
+                    )
 
         return docs
 
     def _setup_llm(self, temperature: float = 0.0) -> None:
         self.llm = AzureChatOpenAI(
-            azure_endpoint=os.getenv("AZURE_ENDPOINT"),
-            azure_deployment=os.getenv("AZURE_DEPLOYMENT_NAME"),
-            api_key=os.getenv("OPENAI_API_KEY"),
-            api_version=os.getenv("OPENAI_API_VERSION"),
-            temperature=temperature
+            azure_endpoint=get_env_variable("AZURE_OPENAI_ENDPOINT"),
+            azure_deployment=get_env_variable("AZURE_DEPLOYMENT_NAME"),
+            api_key=get_env_variable("AZURE_OPENAI_API_KEY"),
+            api_version=get_env_variable("AZURE_OPENAI_API_VERSION"),
+            temperature=temperature,
         )
 
         self.qa_chain = RetrievalQA.from_chain_type(
             llm=self.llm,
             chain_type="stuff",
             retriever=self.db.as_retriever(
-                search_type="mmr",
-                search_kwargs={"k": 5, "lambda_mult": 0.6}
+                search_type="mmr", search_kwargs={"k": 5, "lambda_mult": 0.6}
             ),
-            chain_type_kwargs={"prompt": self.prompt}
+            chain_type_kwargs={"prompt": self.prompt},
         )
 
     def query(self, question: str) -> dict:
         result = self.qa_chain.invoke({"query": question})
         return {"question": question, "answer": result["result"]}
+
+
+if __name__ == "__main__":
+    agent = WebAgent()
+    print(agent.query("Quelles sont les formations proposées par Sup de Vinci ?"))
