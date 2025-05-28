@@ -187,3 +187,7 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 .idea/
+.vscode/
+
+# personal data
+chatbot/data/sup_de_vinci_students.json

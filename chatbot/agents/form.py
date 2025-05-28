@@ -1,5 +1,3 @@
-"""AI agent for user information collection."""
-
 from datetime import datetime
 from enum import Enum
 import json

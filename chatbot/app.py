@@ -1,5 +1,3 @@
-"""Main Sup de Vinci chatbot application."""
-
 from pages.chatbot import show_chatbot
 from pages.home import show_home
 import streamlit as st

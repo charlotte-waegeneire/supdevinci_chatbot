@@ -1,5 +1,3 @@
-"""Chatbot page module for Sup de Vinci."""
-
 from datetime import datetime
 import os
 import sys
@@ -14,7 +12,7 @@ from agents.form import CollectionState, InformationCollectorAgent
 def initialize_session_state():
     if "chatbot_agent" not in st.session_state:
         st.session_state.chatbot_agent = InformationCollectorAgent(
-            "../../data/sup_de_vinci_students.json"
+            "../data/sup_de_vinci_students.json"
         )
 
     if "messages" not in st.session_state:

@@ -1,5 +1,3 @@
-"""Home page module for Sup de Vinci chatbot."""
-
 import streamlit as st
 
 
