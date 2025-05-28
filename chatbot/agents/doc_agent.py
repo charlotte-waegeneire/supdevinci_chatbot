@@ -10,6 +10,7 @@ avec optimisation des appels LLM pour limiter les coûts.
 Ajout d'un système de prompt pour structurer et clarifier les réponses du chatbot.
 """
 import os
+import warnings
 from dotenv import load_dotenv
 
 # Mise à jour des imports vers langchain-community
@@ -23,6 +24,10 @@ from langchain.prompts import PromptTemplate
 
 # Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
+
+# Désactiver les avertissements de dépréciation de langchain
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+# warnings.filterwarnings("ignore", category=LangchainDeprecationWarning)
 
 class DocAgent:
     def __init__(
@@ -198,7 +203,7 @@ Réponds concrétement et sois direct sans ajouter des mots pour embellir tes r�
         result = self.qa_chain({"query": question})
         # Logging des sources
         sources = [doc.metadata.get("source", "[source inconnue]") for doc in result["source_documents"]]
-        print("Sources utilisées :", sources)
+        # print("Sources utilisées :", sources)
         return result["result"]
 
 if __name__ == "__main__":
@@ -224,5 +229,5 @@ Au revoir !""")
         reponse = agent.query(question)
         print("""
 SupdeVinci :
-""", reponse, """
+""", reponse,"""
 """)
