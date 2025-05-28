@@ -10,11 +10,12 @@ avec optimisation des appels LLM pour limiter les coûts.
 Ajout d'un système de prompt pour structurer et clarifier les réponses du chatbot.
 """
 import os
-from dotenv import load_dotenv
+from typing import Optional
 
-# Mise à jour des imports vers langchain-community
+from langchain.chains import RetrievalQA
+from langchain.llms.base import LLM
+from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFDirectoryLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_openai import AzureChatOpenAI
@@ -22,8 +23,6 @@ from langchain.chains import RetrievalQA, ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 
-# Charger les variables d'environnement depuis le fichier .env
-load_dotenv()
 
 class DocAgent:
     def __init__(
@@ -65,7 +64,7 @@ Réponds concrétement et sois direct sans ajouter des mots pour embellir tes r�
         ),
     ):
         """
-        Initialise le DocAgent.
+        Initialise le DocAgent avec Azure OpenAI.
         - Charge/crée le vectorstore Chroma via langchain-chroma
         - Configure le modèle d'embedding HuggingFace
         - Prépare le chain RetrievalQA en mode refine avec prompts personnalisés
@@ -201,6 +200,7 @@ Réponds concrétement et sois direct sans ajouter des mots pour embellir tes r�
         sources = [doc.metadata.get("source", "[source inconnue]") for doc in result["source_documents"]]
         print("Sources utilisées :", sources)
         return result["result"]
+
 
 if __name__ == "__main__":
     # Démarrage interactif en terminal
