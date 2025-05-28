@@ -21,8 +21,8 @@ EXCLUDE_PATTERNS = [
 visited = set()
 found_links = set()
 to_visit = [BASE_URL]
-md_dir = "data/website_pages"
-vector_dir = "data/vectorstore/supdevinci_web"
+md_dir = "chatbot/data/website_pages"
+vector_dir = "chatbot/data/vectorstore/supdevinci_web"
 # ------------------------------------------------------------
 
 

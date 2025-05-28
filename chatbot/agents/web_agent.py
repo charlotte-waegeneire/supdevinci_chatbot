@@ -14,8 +14,8 @@ load_dotenv()
 class WebAgent:
     def __init__(
         self,
-        data_folder: str = "data/website_pages/",
-        persist_directory: str = "data/vectorstore/supdevinci_web/",
+        data_folder: str = "chatbot/data/website_pages/",
+        persist_directory: str = "chatbot/data/vectorstore/supdevinci_web/",
         embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     ) -> None:
         self.data_folder = data_folder
