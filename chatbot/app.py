@@ -1,7 +1,6 @@
 """Main Sup de Vinci chatbot application."""
 
 from pages.chatbot import show_chatbot
-from pages.form import show_form
 from pages.home import show_home
 import streamlit as st
 
@@ -47,15 +46,11 @@ def main():
         st.session_state.current_page = "home"
     if st.sidebar.button("🤖 Chatbot", use_container_width=True):
         st.session_state.current_page = "chatbot"
-    if st.sidebar.button("📝 Formulaire de contact", use_container_width=True):
-        st.session_state.current_page = "form"
 
     if st.session_state.current_page == "home":
         show_home()
     elif st.session_state.current_page == "chatbot":
         show_chatbot()
-    elif st.session_state.current_page == "form":
-        show_form()
 
 
 if __name__ == "__main__":
