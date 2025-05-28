@@ -1,4 +1,3 @@
-import re
 from typing import Dict
 
 from openai import AzureOpenAI
@@ -13,41 +12,19 @@ class MainAgent:
         self.user_context = {}
         self.deployment_name = None
 
-    def _parse_azure_endpoint(self, full_endpoint: str) -> tuple:
-        """Parse the complete Azure endpoint to extract components"""
-        base_endpoint_match = re.match(
-            r"^(https://[^/]+\.openai\.azure\.com)/", full_endpoint
-        )
-        base_endpoint = base_endpoint_match.group(1) if base_endpoint_match else None
-
-        deployment_match = re.search(r"/deployments/([^/]+)/", full_endpoint)
-        deployment_name = (
-            deployment_match.group(1) if deployment_match else "gpt-35-turbo"
-        )
-
-        api_version_match = re.search(r"api-version=([^&]+)", full_endpoint)
-        api_version = (
-            api_version_match.group(1) if api_version_match else "2025-01-01-preview"
-        )
-
-        return base_endpoint, deployment_name, api_version
-
     def _create_azure_client(self):
         """Create an Azure OpenAI client instance"""
-        api_key = get_env_variable("OPENAI_API_KEY")
-        full_endpoint = get_env_variable("OPENAI_ENDPOINT")
-
-        base_endpoint, deployment_name, api_version = self._parse_azure_endpoint(
-            full_endpoint
-        )
+        api_key = get_env_variable("AZURE_OPENAI_API_KEY")
+        endpoint = get_env_variable("AZURE_OPENAI_ENDPOINT")
+        api_version = get_env_variable("AZURE_OPENAI_API_VERSION")
+        deployment_name = get_env_variable("AZURE_DEPLOYMENT_NAME")
 
         self.deployment_name = deployment_name
 
-        if not base_endpoint:
-            raise ValueError("Impossible de parser l'endpoint Azure OpenAI")
-
         return AzureOpenAI(
-            api_version=api_version, azure_endpoint=base_endpoint, api_key=api_key
+            api_version=api_version,
+            azure_endpoint=endpoint,
+            api_key=api_key,
         )
 
     def detect_intent(self, user_input: str) -> str:

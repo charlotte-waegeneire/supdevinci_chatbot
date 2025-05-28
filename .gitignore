@@ -189,5 +189,8 @@ cython_debug/
 .idea/
 .vscode/
 
+# Data files
+chatbot/data/
+
 # personal data
 chatbot/data/sup_de_vinci_students.json
