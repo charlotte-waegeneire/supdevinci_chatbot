@@ -186,9 +186,11 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
-
-## VSCode
+.idea/
 .vscode/
 
 # Data files
 chatbot/data/
+
+# personal data
+chatbot/data/sup_de_vinci_students.json
