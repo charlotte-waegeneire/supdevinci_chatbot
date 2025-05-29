@@ -8,7 +8,6 @@ from chatbot.agents.main_agent import MainAgent
 
 def initialize_session_state():
     """Initialize session state for the enhanced chatbot"""
-
     if "unified_agent" not in st.session_state:
         try:
             with st.spinner("🚀 Initialisation des agents intelligents..."):
@@ -55,15 +54,12 @@ def initialize_session_state():
 def get_welcome_message():
     """Get welcome message for the chatbot"""
     return """🎓 **Bonjour et bienvenue chez Sup de Vinci !**
-
-Je suis votre assistant virtuel intelligent. Je peux vous aider avec :
-
-🌐 **Informations sur l'école** : formations, admissions, campus, programmes
-📚 **Documentation** : règlements, brochures, guides détaillés
-📝 **Contact et candidatures** : collecte d'informations pour votre inscription
-💬 **Questions générales** : tout ce qui concerne Sup de Vinci
-
-**Comment puis-je vous aider aujourd'hui ?**"""
+    \nJe suis votre assistant virtuel intelligent. Je peux vous aider avec :
+    \n\n🌐 **Informations sur l'école** : formations, admissions, campus, programmes
+    \n📚 **Documentation** : règlements, brochures, guides détaillés
+    \n📝 **Contact et candidatures** : collecte d'informations pour votre inscription
+    \n💬 **Questions générales** : tout ce qui concerne Sup de Vinci
+    \n\n**Comment puis-je vous aider aujourd'hui ?**"""
 
 
 def display_message(message, is_user=False):
@@ -238,40 +234,6 @@ def inject_custom_css():
     )
 
 
-def show_help_section():
-    """Show help and information section"""
-    with st.expander("📌 Guide d'utilisation du chatbot"):
-        st.markdown("""
-        **🤖 Chatbot Multi-Agents Sup de Vinci**
-
-        Notre assistant intelligent utilise plusieurs agents spécialisés :
-
-        🌐 **Agent Site Web** : Répond aux questions sur les formations, admissions, campus
-        - Exemple: *"Quelles formations proposez-vous ?"*
-        - Exemple: *"Quelles sont les spécialités ?"*
-
-        📚 **Agent Documentation** : Consulte les brochures
-        - Exemple: *"Montre-moi la brochure de la formation de développeur web"*
-
-        📝 **Agent Contact** : Collecte vos informations pour candidatures
-        - Exemple: *"Je suis intéressé par une inscription"*
-
-        🤖 **Assistant Principal** : Coordination et réponses générales
-
-        **💡 Conseils d'utilisation :**
-        - Posez des questions claires et précises
-        - L'assistant détecte automatiquement le bon agent à utiliser
-        - Pour les questions de suivi, utilisez des mots comme "autre", "également", "aussi"
-        - Le chatbot maintient le contexte de la conversation
-        - En cas d'erreur, le système propose des alternatives
-
-        **🔧 En cas de problème :**
-        - Le chatbot fonctionne en mode dégradé si certains agents sont indisponibles
-        - Les erreurs sont automatiquement gérées avec des réponses de secours
-        - Vous pouvez toujours nous contacter directement si nécessaire.
-        """)
-
-
 def show_chatbot():
     """Main chatbot interface with multi-agent integration and improved error handling"""
     inject_custom_css()
@@ -361,12 +323,10 @@ def show_chatbot():
                 error_msg = "Une erreur inattendue s'est produite. Notre équipe technique a été notifiée."
 
                 fallback_response = """Je rencontre une difficulté technique, mais je peux tout de même vous aider !
-
-🎓 **Pour les formations** : Sup de Vinci propose des Mastères en informatique avec plusieurs spécialisations
-📞 **Pour nous contacter** : 01.23.45.67.89 ou contact@supdevinci.fr
-📧 **Pour candidater** : Utilisez notre formulaire en ligne ou contactez-nous directement
-
-Que puis-je faire d'autre pour vous aider ?"""
+                \n\n🎓 **Pour les formations** : Sup de Vinci propose des Mastères en informatique avec plusieurs spécialisations
+                \n📞 **Pour nous contacter** : 01.23.45.67.89 ou contact@supdevinci.fr
+                \n📧 **Pour candidater** : Utilisez notre formulaire en ligne ou contactez-nous directement
+                \n\nQue puis-je faire d'autre pour vous aider ?"""
 
                 st.session_state.messages.append(
                     {
@@ -388,8 +348,6 @@ Que puis-je faire d'autre pour vous aider ?"""
         handle_completion()
 
     display_progress_indicator()
-
-    show_help_section()
 
 
 if __name__ == "__main__":

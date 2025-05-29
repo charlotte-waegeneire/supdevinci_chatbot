@@ -5,7 +5,7 @@ from chatbot.pages.home import show_home
 
 
 def main():
-    """Main application function."""
+    """Main application function using st.Page and st.navigation."""
     st.set_page_config(
         page_title="Sup de Vinci - Chatbot", page_icon="🎓", layout="wide"
     )
@@ -32,24 +32,24 @@ def main():
         unsafe_allow_html=True,
     )
 
-    st.sidebar.title("🎓 Sup de Vinci")
-    st.sidebar.markdown("**École d'informatique**")
-    st.sidebar.markdown("---")
+    home_page = st.Page(show_home, title="Accueil", icon="🏠", default=True)
 
-    st.sidebar.markdown("### 📍 Navigation")
+    chatbot_page = st.Page(show_chatbot, title="Chatbot", icon="🤖")
 
-    if "current_page" not in st.session_state:
-        st.session_state.current_page = "home"
+    pg = st.navigation([home_page, chatbot_page])
 
-    if st.sidebar.button("🏠 Accueil", use_container_width=True):
-        st.session_state.current_page = "home"
-    if st.sidebar.button("🤖 Chatbot", use_container_width=True):
-        st.session_state.current_page = "chatbot"
+    with st.sidebar:
+        st.title("🎓 Sup de Vinci")
+        st.markdown("**École d'informatique**")
+        st.markdown("---")
+        st.markdown("### 📍 Navigation")
 
-    if st.session_state.current_page == "home":
-        show_home()
-    elif st.session_state.current_page == "chatbot":
-        show_chatbot()
+        if st.button("🏠 Accueil", use_container_width=True):
+            st.switch_page(home_page)
+        if st.button("🤖 Chatbot", use_container_width=True):
+            st.switch_page(chatbot_page)
+
+    pg.run()
 
 
 if __name__ == "__main__":

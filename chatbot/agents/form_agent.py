@@ -157,17 +157,14 @@ class FormAgent:
         self.save_to_excel()
 
         return f"""
-{self.messages[CollectionState.COMPLETED][0]}
-
-• **Nom:** {self.user_info["nom"]}
-• **Prénom:** {self.user_info["prenom"]}
-• **Téléphone:** {self.user_info["telephone"]}
-• **Email:** {self.user_info["email"]}
-
-✅ Vos informations ont été enregistrées avec succès !
-Un conseiller vous contactera prochainement pour la suite de votre inscription à Sup de Vinci.
-
-Merci et à bientôt ! 🎓
+        {self.messages[CollectionState.COMPLETED][0]}
+        \n\n• **Nom:** {self.user_info["nom"]}
+        \n• **Prénom:** {self.user_info["prenom"]}
+        \n• **Téléphone:** {self.user_info["telephone"]}
+        \n• **Email:** {self.user_info["email"]}
+        \n\n✅ Vos informations ont été enregistrées avec succès !
+        \nUn conseiller vous contactera prochainement pour la suite de votre inscription à Sup de Vinci.
+        \n\nMerci et à bientôt ! 🎓
         """.strip()
 
     def save_to_excel(self):
