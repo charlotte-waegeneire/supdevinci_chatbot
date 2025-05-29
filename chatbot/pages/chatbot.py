@@ -1,6 +1,4 @@
 from datetime import datetime
-import json
-import traceback
 
 import streamlit as st
 
@@ -56,8 +54,7 @@ def initialize_session_state():
 
 def get_welcome_message():
     """Get welcome message for the chatbot"""
-    return """
-🎓 **Bonjour et bienvenue chez Sup de Vinci !**
+    return """🎓 **Bonjour et bienvenue chez Sup de Vinci !**
 
 Je suis votre assistant virtuel intelligent. Je peux vous aider avec :
 
@@ -66,8 +63,7 @@ Je suis votre assistant virtuel intelligent. Je peux vous aider avec :
 📝 **Contact et candidatures** : collecte d'informations pour votre inscription
 💬 **Questions générales** : tout ce qui concerne Sup de Vinci
 
-**Comment puis-je vous aider aujourd'hui ?**
-    """.strip()
+**Comment puis-je vous aider aujourd'hui ?**"""
 
 
 def display_message(message, is_user=False):
@@ -97,15 +93,6 @@ def display_message(message, is_user=False):
                 st.caption(f"🏷️ {agent_names.get(agent_used, agent_used)}")
 
             st.markdown(message["content"])
-
-            # Show error indicator if this was an error response
-            if message.get("intent") == "error" and message.get("show_debug", False):
-                with st.expander("🔧 Informations de débogage"):
-                    st.code(
-                        message.get(
-                            "debug_info", "Aucune information de débogage disponible"
-                        )
-                    )
 
 
 def display_progress_indicator():
@@ -261,10 +248,10 @@ def show_help_section():
 
         🌐 **Agent Site Web** : Répond aux questions sur les formations, admissions, campus
         - Exemple: *"Quelles formations proposez-vous ?"*
-        - Exemple: *"Existe-t-il d'autres spécialités ?"*
+        - Exemple: *"Quelles sont les spécialités ?"*
 
-        📚 **Agent Documentation** : Consulte les règlements, brochures, guides
-        - Exemple: *"Montrez-moi le règlement intérieur"*
+        📚 **Agent Documentation** : Consulte les brochures
+        - Exemple: *"Montre-moi la brochure de la formation de développeur web"*
 
         📝 **Agent Contact** : Collecte vos informations pour candidatures
         - Exemple: *"Je suis intéressé par une inscription"*
@@ -281,13 +268,8 @@ def show_help_section():
         **🔧 En cas de problème :**
         - Le chatbot fonctionne en mode dégradé si certains agents sont indisponibles
         - Les erreurs sont automatiquement gérées avec des réponses de secours
-        - Vous pouvez toujours nous contacter directement si nécessaire
+        - Vous pouvez toujours nous contacter directement si nécessaire.
         """)
-
-        if st.button("📞 Besoin d'aide supplémentaire ?"):
-            st.info(
-                "Contactez notre équipe pédagogique au 01.23.45.67.89 ou par email à contact@supdevinci.fr"
-            )
 
 
 def show_chatbot():
@@ -351,12 +333,6 @@ def show_chatbot():
                     "intent": response.get("intent", "general"),
                 }
 
-                if response.get("intent") == "error" and st.session_state.get(
-                    "debug_mode", False
-                ):
-                    bot_message["show_debug"] = True
-                    bot_message["debug_info"] = response.get("error", "Erreur inconnue")
-
                 st.session_state.messages.append(bot_message)
 
                 st.session_state.chat_stats["intents_detected"].append(
@@ -378,7 +354,7 @@ def show_chatbot():
                         "✨ Processus de contact initié ! Suivez les instructions ci-dessus."
                     )
 
-            except Exception as e:
+            except Exception:
                 st.session_state.error_count += 1
                 st.session_state.chat_stats["failed_responses"] += 1
 
@@ -386,10 +362,11 @@ def show_chatbot():
 
                 fallback_response = """Je rencontre une difficulté technique, mais je peux tout de même vous aider !
 
-                🎓 **Pour les formations** : Sup de Vinci propose des Mastères en informatique avec plusieurs spécialisations
-                📞 **Pour nous contacter** : 01.23.45.67.89 ou contact@supdevinci.fr
-                📧 **Pour candidater** : Utilisez notre formulaire en ligne ou contactez-nous directement
-                Que puis-je faire d'autre pour vous aider ?"""
+🎓 **Pour les formations** : Sup de Vinci propose des Mastères en informatique avec plusieurs spécialisations
+📞 **Pour nous contacter** : 01.23.45.67.89 ou contact@supdevinci.fr
+📧 **Pour candidater** : Utilisez notre formulaire en ligne ou contactez-nous directement
+
+Que puis-je faire d'autre pour vous aider ?"""
 
                 st.session_state.messages.append(
                     {
@@ -398,10 +375,6 @@ def show_chatbot():
                         "timestamp": datetime.now(),
                         "agent_used": "main_agent",
                         "intent": "error",
-                        "show_debug": st.session_state.get("debug_mode", False),
-                        "debug_info": str(e) + "\n" + traceback.format_exc()
-                        if st.session_state.get("debug_mode", False)
-                        else None,
                     }
                 )
 
@@ -416,60 +389,6 @@ def show_chatbot():
 
     display_progress_indicator()
 
-    st.sidebar.markdown("### 🎛️ Contrôles")
-
-    col1, col2 = st.sidebar.columns(2)
-    with col1:
-        if st.button("🔄 Reset", use_container_width=True):
-            st.session_state.messages = []
-            if st.session_state.agent_initialized:
-                st.session_state.unified_agent.reset_conversation()
-
-            welcome_msg = get_welcome_message()
-            st.session_state.messages.append(
-                {
-                    "role": "assistant",
-                    "content": welcome_msg,
-                    "timestamp": datetime.now(),
-                    "agent_used": "main_agent",
-                    "intent": "greeting",
-                }
-            )
-            st.session_state.error_count = 0
-            st.rerun()
-
-    with col2:
-        if (
-            st.button("💾 Export", use_container_width=True)
-            and st.session_state.messages
-        ):
-            export_data = {
-                "conversation": st.session_state.messages,
-                "timestamp": datetime.now().isoformat(),
-                "stats": st.session_state.chat_stats,
-                "agent_status": st.session_state.unified_agent.get_agent_status()
-                if st.session_state.agent_initialized
-                else {},
-            }
-            st.sidebar.download_button(
-                label="📥 Télécharger",
-                data=json.dumps(export_data, ensure_ascii=False, indent=2, default=str),
-                file_name=f"conversation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                mime="application/json",
-            )
-
-    st.sidebar.markdown("---")
-    debug_mode = st.sidebar.checkbox(
-        "🔧 Mode débogage", value=st.session_state.get("debug_mode", False)
-    )
-    st.session_state.debug_mode = debug_mode
-
-    if debug_mode:
-        st.sidebar.info(
-            "Mode débogage activé - Les erreurs détaillées seront affichées"
-        )
-
-    # Help section
     show_help_section()
 
 

@@ -191,7 +191,7 @@ cython_debug/
 chatbot/data/
 
 # personal data
-chatbot/data/sup_de_vinci_students.json
+sup_de_vinci_students.xlsx
 
-# mac users DS Store files everywhere
+# Mac users
 .DS_Store

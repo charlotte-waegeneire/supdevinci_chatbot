@@ -248,12 +248,12 @@ class MainAgent:
                 agent_used = "action_agent"
 
             else:
-                response = self._generate_general_response_safe(user_input, intent)
+                response = self._generate_general_response_safe(user_input)
                 agent_used = "main_agent"
 
             self.conversation_history.append({"role": "assistant", "content": response})
 
-            self._update_conversation_context(intent, user_input, response)
+            self._update_conversation_context(intent, user_input)
 
             return {
                 "response": response,
@@ -404,32 +404,32 @@ class MainAgent:
         ):
             return """Sup de Vinci propose plusieurs formations en informatique :
 
-            • **Mastères spécialisés** en développement, cybersécurité, data science
-            • **Bachelors** en informatique avec différentes spécialisations
-            • **Formations courtes** et certifications professionnelles
+• **Mastères spécialisés** en développement, cybersécurité, data science
+• **Bachelors** en informatique avec différentes spécialisations
+• **Formations courtes** et certifications professionnelles
 
-            Pour plus de détails spécifiques, puis-je recueillir vos coordonnées pour qu'un conseiller vous recontacte ?"""
+Pour plus de détails spécifiques, puis-je recueillir vos coordonnées pour qu'un conseiller vous recontacte ?"""
 
         if any(
             word in user_lower for word in ["contact", "inscription", "candidature"]
         ):
             return """Je peux vous aider avec votre candidature !
 
-            Pour commencer votre inscription chez Sup de Vinci, j'aurais besoin de quelques informations :
-            - Vos coordonnées
-            - Le type de formation qui vous intéresse
-            - Votre niveau d'études actuel
+Pour commencer votre inscription chez Sup de Vinci, j'aurais besoin de quelques informations :
+- Vos coordonnées
+- Le type de formation qui vous intéresse
+- Votre niveau d'études actuel
 
-            Souhaitez-vous commencer le processus maintenant ?"""
+Souhaitez-vous commencer le processus maintenant ?"""
 
         return """Je suis là pour vous aider avec toutes vos questions sur Sup de Vinci !
 
-            Je peux vous renseigner sur :
-            🎓 Nos formations et programmes
-            📋 Les modalités d'inscription
-            🏢 Nos campus et équipements
+Je peux vous renseigner sur :
+🎓 Nos formations et programmes
+📋 Les modalités d'inscription
+🏢 Nos campus et équipements
 
-            Que souhaitez-vous savoir ?"""
+Que souhaitez-vous savoir ?"""
 
     def _update_conversation_context(self, intent: str, user_input: str):
         """Update conversation context for better follow-up handling"""

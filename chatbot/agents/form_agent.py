@@ -6,6 +6,12 @@ from typing import Dict, List
 
 import pandas as pd
 
+from chatbot.utils import get_env_variable
+
+EXCEL_FILEPATH = os.path.join(
+    get_env_variable("EXCEL_FILEPATH"), "sup_de_vinci_students.xlsx"
+)
+
 
 class CollectionState(Enum):
     GREETING = "greeting"
@@ -17,13 +23,13 @@ class CollectionState(Enum):
 
 
 class FormAgent:
-    def __init__(self, output_file: str = "../../data/sup_de_vinci_students.json"):
+    def __init__(self, output_file: str = EXCEL_FILEPATH):
         self.output_file = output_file
         self.reset_session()
 
         self.messages = {
             CollectionState.GREETING: [
-                "Bonjour ! Je suis l'assistant virtuel de Sup de Vinci. Je vais vous aider à compléter votre inscription.",
+                "Je vais vous aider à compléter votre inscription.",
                 "Pour commencer, pouvez-vous me donner votre nom de famille ?",
             ],
             CollectionState.COLLECTING_NAME: [
@@ -169,15 +175,26 @@ Merci et à bientôt ! 🎓
         try:
             os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
 
+            if not self.output_file.endswith(".xlsx"):
+                self.output_file = self.output_file + ".xlsx"
+
             try:
-                df_existing = pd.read_excel(self.output_file)
+                df_existing = pd.read_excel(self.output_file, engine="openpyxl")
             except FileNotFoundError:
                 df_existing = pd.DataFrame(
                     columns=["nom", "prenom", "telephone", "email", "timestamp"]
                 )
-            new_row = pd.DataFrame([self.user_info])
+            except Exception as e:
+                print(
+                    f"Warning: Could not read existing file ({e}). Creating new file."
+                )
+                df_existing = pd.DataFrame(
+                    columns=["nom", "prenom", "telephone", "email", "timestamp"]
+                )
 
+            new_row = pd.DataFrame([self.user_info])
             df_updated = pd.concat([df_existing, new_row], ignore_index=True)
+
             df_updated.to_excel(self.output_file, index=False, engine="openpyxl")
 
         except Exception as e:
@@ -195,7 +212,11 @@ Merci et à bientôt ! 🎓
     def get_statistics(self) -> Dict:
         """Get statistics from Excel file"""
         try:
-            df = pd.read_excel(self.output_file)
+            file_path = self.output_file
+            if not file_path.endswith(".xlsx"):
+                file_path = file_path + ".xlsx"
+
+            df = pd.read_excel(file_path, engine="openpyxl")
 
             today = datetime.now().strftime("%Y-%m-%d")
 
