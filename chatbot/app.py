@@ -1,7 +1,11 @@
+import os
+
 import streamlit as st
 
 from chatbot.pages.chatbot import show_chatbot
 from chatbot.pages.home import show_home
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 def main():

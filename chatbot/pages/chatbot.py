@@ -239,6 +239,9 @@ def show_chatbot():
     inject_custom_css()
     initialize_session_state()
 
+    if "processing_message" not in st.session_state:
+        st.session_state.processing_message = False
+
     st.title("🤖 Assistant Virtuel Sup de Vinci")
     st.markdown("## 💬 Conversation Multi-Agents")
 
@@ -265,82 +268,86 @@ def show_chatbot():
 
     if not st.session_state.input_disabled:
         user_input = st.chat_input(
-            placeholder="Posez votre question sur Sup de Vinci...", disabled=False
+            placeholder="Posez votre question sur Sup de Vinci...",
+            disabled=st.session_state.processing_message,
         )
 
-        if user_input:
+        if user_input and not st.session_state.processing_message:
             st.session_state.messages.append(
                 {"role": "user", "content": user_input, "timestamp": datetime.now()}
             )
-
             st.session_state.chat_stats["total_messages"] += 1
-
-            try:
-                with st.spinner("🤔 L'assistant analyse votre demande..."):
-                    response = st.session_state.unified_agent.generate_response(
-                        user_input
-                    )
-
-                if response.get("success", True):
-                    st.session_state.chat_stats["successful_responses"] += 1
-                else:
-                    st.session_state.chat_stats["failed_responses"] += 1
-                    st.session_state.error_count += 1
-
-                bot_message = {
-                    "role": "assistant",
-                    "content": response["response"],
-                    "timestamp": datetime.now(),
-                    "agent_used": response.get("agent_used", "main_agent"),
-                    "intent": response.get("intent", "general"),
-                }
-
-                st.session_state.messages.append(bot_message)
-
-                st.session_state.chat_stats["intents_detected"].append(
-                    response.get("intent", "unknown")
-                )
-                st.session_state.chat_stats["agents_used"].append(
-                    response.get("agent_used", "unknown")
-                )
-
-                collection_status = response.get("collection_status", {})
-                if collection_status.get("complete"):
-                    st.session_state.input_disabled = True
-                    st.session_state.conversation_mode = "completed"
-
-                if response.get("intent") == "contact" and not collection_status.get(
-                    "active"
-                ):
-                    st.success(
-                        "✨ Processus de contact initié ! Suivez les instructions ci-dessus."
-                    )
-
-            except Exception:
-                st.session_state.error_count += 1
-                st.session_state.chat_stats["failed_responses"] += 1
-
-                error_msg = "Une erreur inattendue s'est produite. Notre équipe technique a été notifiée."
-
-                fallback_response = """Je rencontre une difficulté technique, mais je peux tout de même vous aider !
-                \n\n🎓 **Pour les formations** : Sup de Vinci propose des Mastères en informatique avec plusieurs spécialisations
-                \n📞 **Pour nous contacter** : 01.23.45.67.89 ou contact@supdevinci.fr
-                \n📧 **Pour candidater** : Utilisez notre formulaire en ligne ou contactez-nous directement
-                \n\nQue puis-je faire d'autre pour vous aider ?"""
-
-                st.session_state.messages.append(
-                    {
-                        "role": "assistant",
-                        "content": fallback_response,
-                        "timestamp": datetime.now(),
-                        "agent_used": "main_agent",
-                        "intent": "error",
-                    }
-                )
-
-                st.error(error_msg)
-
+            st.session_state.processing_message = True
             st.rerun()
+
+    if st.session_state.processing_message and len(st.session_state.messages) > 0:
+        user_input = st.session_state.messages[-1]["content"]
+
+        try:
+            with st.spinner("🤔 L'assistant analyse votre demande..."):
+                response = st.session_state.unified_agent.generate_response(user_input)
+
+            if response.get("success", True):
+                st.session_state.chat_stats["successful_responses"] += 1
+            else:
+                st.session_state.chat_stats["failed_responses"] += 1
+                st.session_state.error_count += 1
+
+            bot_message = {
+                "role": "assistant",
+                "content": response["response"],
+                "timestamp": datetime.now(),
+                "agent_used": response.get("agent_used", "main_agent"),
+                "intent": response.get("intent", "general"),
+            }
+
+            st.session_state.messages.append(bot_message)
+
+            st.session_state.chat_stats["intents_detected"].append(
+                response.get("intent", "unknown")
+            )
+            st.session_state.chat_stats["agents_used"].append(
+                response.get("agent_used", "unknown")
+            )
+
+            collection_status = response.get("collection_status", {})
+            if collection_status.get("complete"):
+                st.session_state.input_disabled = True
+                st.session_state.conversation_mode = "completed"
+
+            if response.get("intent") == "contact" and not collection_status.get(
+                "active"
+            ):
+                st.success(
+                    "✨ Processus de contact initié ! Suivez les instructions ci-dessus."
+                )
+
+        except Exception:
+            st.session_state.error_count += 1
+            st.session_state.chat_stats["failed_responses"] += 1
+
+            error_msg = "Une erreur inattendue s'est produite. Notre équipe technique a été notifiée."
+
+            fallback_response = """Je rencontre une difficulté technique, mais je peux tout de même vous aider !
+            \n\n🎓 **Pour les formations** : Sup de Vinci propose des Mastères en informatique avec plusieurs spécialisations
+            \n📞 **Pour nous contacter** : 01.23.45.67.89 ou contact@supdevinci.fr
+            \n📧 **Pour candidater** : Utilisez notre formulaire en ligne ou contactez-nous directement
+            \n\nQue puis-je faire d'autre pour vous aider ?"""
+
+            st.session_state.messages.append(
+                {
+                    "role": "assistant",
+                    "content": fallback_response,
+                    "timestamp": datetime.now(),
+                    "agent_used": "main_agent",
+                    "intent": "error",
+                }
+            )
+
+            st.error(error_msg)
+
+        st.session_state.processing_message = False
+        st.rerun()
 
     if st.session_state.conversation_mode == "completed":
         st.markdown("---")
