@@ -1,6 +1,7 @@
-from pages.chatbot import show_chatbot
-from pages.home import show_home
 import streamlit as st
+
+from chatbot.pages.chatbot import show_chatbot
+from chatbot.pages.home import show_home
 
 
 def main():

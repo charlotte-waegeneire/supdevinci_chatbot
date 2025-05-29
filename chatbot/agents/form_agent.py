@@ -1,9 +1,10 @@
 from datetime import datetime
 from enum import Enum
-import json
 import os
 import re
 from typing import Dict, List
+
+import pandas as pd
 
 
 class CollectionState(Enum):
@@ -15,7 +16,7 @@ class CollectionState(Enum):
     COMPLETED = "completed"
 
 
-class InformationCollectorAgent:
+class FormAgent:
     def __init__(self, output_file: str = "../../data/sup_de_vinci_students.json"):
         self.output_file = output_file
         self.reset_session()
@@ -147,7 +148,7 @@ class InformationCollectorAgent:
 
     def _complete_collection(self) -> str:
         self.user_info["timestamp"] = datetime.now().isoformat()
-        self.save_to_json()
+        self.save_to_excel()
 
         return f"""
 {self.messages[CollectionState.COMPLETED][0]}
@@ -163,22 +164,21 @@ Un conseiller vous contactera prochainement pour la suite de votre inscription �
 Merci et à bientôt ! 🎓
         """.strip()
 
-    def save_to_json(self):
+    def save_to_excel(self):
+        """Save user information to Excel file"""
         try:
             os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
 
             try:
-                with open(self.output_file, encoding="utf-8") as f:
-                    data = json.load(f)
-                if not isinstance(data, list):
-                    data = []
-            except (FileNotFoundError, json.JSONDecodeError):
-                data = []
+                df_existing = pd.read_excel(self.output_file)
+            except FileNotFoundError:
+                df_existing = pd.DataFrame(
+                    columns=["nom", "prenom", "telephone", "email", "timestamp"]
+                )
+            new_row = pd.DataFrame([self.user_info])
 
-            data.append(self.user_info.copy())
-
-            with open(self.output_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            df_updated = pd.concat([df_existing, new_row], ignore_index=True)
+            df_updated.to_excel(self.output_file, index=False, engine="openpyxl")
 
         except Exception as e:
             raise Exception(f"Erreur lors de la sauvegarde: {e}") from e
@@ -193,20 +193,17 @@ Merci et à bientôt ! 🎓
         return self.user_info.copy()
 
     def get_statistics(self) -> Dict:
+        """Get statistics from Excel file"""
         try:
-            with open(self.output_file, encoding="utf-8") as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    today = datetime.now().strftime("%Y-%m-%d")
-                    today_count = len(
-                        [
-                            item
-                            for item in data
-                            if item.get("timestamp", "").startswith(today)
-                        ]
-                    )
-                    return {"total": len(data), "today": today_count}
-        except (FileNotFoundError, json.JSONDecodeError):
-            pass
+            df = pd.read_excel(self.output_file)
 
-        return {"total": 0, "today": 0}
+            today = datetime.now().strftime("%Y-%m-%d")
+
+            today_count = 0
+            if "timestamp" in df.columns:
+                today_count = len(df[df["timestamp"].astype(str).str.startswith(today)])
+
+            return {"total": len(df), "today": today_count}
+
+        except (FileNotFoundError, Exception):
+            return {"total": 0, "today": 0}
