@@ -8,14 +8,136 @@ version = "0.1.0"
 description = "A Streamlit-based chatbot application"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = [
-    "streamlit",
+license = {text = "MIT"}
+authors = [
+    {name = "Charlotte Waegeneire"},
+    {name = "Chloé Gerardin"},
+    {name = "Denis Kirat"},
+    {name = "Steven Sivakaran"},
+    {name = "Amine Benyahya"},
 ]
+maintainers = [
+    {name = "Charlotte Waegeneire", email = "charlotte.waegeneire@supdevinci.fr"},
+]
+keywords = [
+    "chatbot",
+    "ai",
+    "streamlit",
+    "langchain",
+    "rag",
+    "education",
+    "supdevinci",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Education",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Communications :: Chat",
+]
+dependencies = [
+    # Core web framework
+    "streamlit>=1.28.0",
+
+    # AI/ML and LLM libraries
+    "openai>=1.0.0",
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "langchain-community>=0.0.20",
+    "langchain-chroma>=0.1.0",
+    "langchain-huggingface>=0.0.1",
+    "langchain-text-splitters>=0.0.1",
+
+    # Vector database and embeddings
+    "chromadb>=0.4.0",
+    "sentence-transformers>=2.2.0",
+
+    # Document processing
+    "pypdf>=3.0.0",
+    "pypdf2>=3.0.0",
+    "openpyxl>=3.0.0",
+
+    # Environment and configuration
+    "python-dotenv>=1.0.0",
+
+    # Data processing and utilities
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+
+    # Web scraping (for future use)
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+
+    # Additional utilities
+    "pathlib2>=2.3.0; python_version<'3.4'",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/charlotte-waegeneire/supdevinci_chatbot"
+"Bug Reports" = "https://github.com/charlotte-waegeneire/supdevinci_chatbot/issues"
+"Source" = "https://github.com/charlotte-waegeneire/supdevinci_chatbot"
+"Documentation" = "https://github.com/charlotte-waegeneire/supdevinci_chatbot/blob/main/README.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["chatbot*"]
+exclude = ["data*", "tests*", "scripts*", "*.egg-info*"]
 
 [project.optional-dependencies]
 dev = [
+    # Code quality and formatting
     "ruff>=0.11.11",
     "pre-commit>=4.2.0",
+
+    # Testing
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+
+    # Development tools
+    "jupyter>=1.0.0",
+    "ipykernel>=6.0.0",
+
+    # Documentation
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+
+    # Type checking
+    "mypy>=1.0.0",
+    "types-requests>=2.31.0",
+
+    # Environment management
+    "python-dotenv>=1.0.0",
+]
+
+# Production deployment dependencies
+prod = [
+    "gunicorn>=21.0.0",
+    "uvicorn>=0.23.0",
+    "redis>=4.5.0",
+    "psycopg2-binary>=2.9.0",
+]
+
+# AI/ML experimentation dependencies
+ai-extra = [
+    "transformers>=4.30.0",
+    "torch>=2.0.0",
+    "scikit-learn>=1.3.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "plotly>=5.15.0",
+]
+
+# All dependencies for complete development setup
+all = [
+    "supdevinci-chatbot[dev,prod,ai-extra]",
 ]
 
 [tool.ruff]

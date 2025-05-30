@@ -1,9 +1,16 @@
 from datetime import datetime
 from enum import Enum
-import json
 import os
 import re
 from typing import Dict, List
+
+import pandas as pd
+
+from chatbot.utils import get_env_variable
+
+EXCEL_FILEPATH = os.path.join(
+    get_env_variable("EXCEL_FILEPATH"), "sup_de_vinci_students.xlsx"
+)
 
 
 class CollectionState(Enum):
@@ -15,14 +22,14 @@ class CollectionState(Enum):
     COMPLETED = "completed"
 
 
-class InformationCollectorAgent:
-    def __init__(self, output_file: str = "../../data/sup_de_vinci_students.json"):
+class FormAgent:
+    def __init__(self, output_file: str = EXCEL_FILEPATH):
         self.output_file = output_file
         self.reset_session()
 
         self.messages = {
             CollectionState.GREETING: [
-                "Bonjour ! Je suis l'assistant virtuel de Sup de Vinci. Je vais vous aider à compléter votre inscription.",
+                "Je vais vous aider à compléter votre inscription.",
                 "Pour commencer, pouvez-vous me donner votre nom de famille ?",
             ],
             CollectionState.COLLECTING_NAME: [
@@ -147,38 +154,45 @@ class InformationCollectorAgent:
 
     def _complete_collection(self) -> str:
         self.user_info["timestamp"] = datetime.now().isoformat()
-        self.save_to_json()
+        self.save_to_excel()
 
         return f"""
-{self.messages[CollectionState.COMPLETED][0]}
-
-• **Nom:** {self.user_info["nom"]}
-• **Prénom:** {self.user_info["prenom"]}
-• **Téléphone:** {self.user_info["telephone"]}
-• **Email:** {self.user_info["email"]}
-
-✅ Vos informations ont été enregistrées avec succès !
-Un conseiller vous contactera prochainement pour la suite de votre inscription à Sup de Vinci.
-
-Merci et à bientôt ! 🎓
+        {self.messages[CollectionState.COMPLETED][0]}
+        \n\n• **Nom:** {self.user_info["nom"]}
+        \n• **Prénom:** {self.user_info["prenom"]}
+        \n• **Téléphone:** {self.user_info["telephone"]}
+        \n• **Email:** {self.user_info["email"]}
+        \n\n✅ Vos informations ont été enregistrées avec succès !
+        \nUn conseiller vous contactera prochainement pour la suite de votre inscription à Sup de Vinci.
+        \n\nMerci et à bientôt ! 🎓
         """.strip()
 
-    def save_to_json(self):
+    def save_to_excel(self):
+        """Save user information to Excel file"""
         try:
             os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
 
+            if not self.output_file.endswith(".xlsx"):
+                self.output_file = self.output_file + ".xlsx"
+
             try:
-                with open(self.output_file, encoding="utf-8") as f:
-                    data = json.load(f)
-                if not isinstance(data, list):
-                    data = []
-            except (FileNotFoundError, json.JSONDecodeError):
-                data = []
+                df_existing = pd.read_excel(self.output_file, engine="openpyxl")
+            except FileNotFoundError:
+                df_existing = pd.DataFrame(
+                    columns=["nom", "prenom", "telephone", "email", "timestamp"]
+                )
+            except Exception as e:
+                print(
+                    f"Warning: Could not read existing file ({e}). Creating new file."
+                )
+                df_existing = pd.DataFrame(
+                    columns=["nom", "prenom", "telephone", "email", "timestamp"]
+                )
 
-            data.append(self.user_info.copy())
+            new_row = pd.DataFrame([self.user_info])
+            df_updated = pd.concat([df_existing, new_row], ignore_index=True)
 
-            with open(self.output_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            df_updated.to_excel(self.output_file, index=False, engine="openpyxl")
 
         except Exception as e:
             raise Exception(f"Erreur lors de la sauvegarde: {e}") from e
@@ -193,20 +207,21 @@ Merci et à bientôt ! 🎓
         return self.user_info.copy()
 
     def get_statistics(self) -> Dict:
+        """Get statistics from Excel file"""
         try:
-            with open(self.output_file, encoding="utf-8") as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    today = datetime.now().strftime("%Y-%m-%d")
-                    today_count = len(
-                        [
-                            item
-                            for item in data
-                            if item.get("timestamp", "").startswith(today)
-                        ]
-                    )
-                    return {"total": len(data), "today": today_count}
-        except (FileNotFoundError, json.JSONDecodeError):
-            pass
+            file_path = self.output_file
+            if not file_path.endswith(".xlsx"):
+                file_path = file_path + ".xlsx"
 
-        return {"total": 0, "today": 0}
+            df = pd.read_excel(file_path, engine="openpyxl")
+
+            today = datetime.now().strftime("%Y-%m-%d")
+
+            today_count = 0
+            if "timestamp" in df.columns:
+                today_count = len(df[df["timestamp"].astype(str).str.startswith(today)])
+
+            return {"total": len(df), "today": today_count}
+
+        except (FileNotFoundError, Exception):
+            return {"total": 0, "today": 0}
