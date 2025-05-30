@@ -62,6 +62,7 @@ dependencies = [
     # Document processing
     "pypdf>=3.0.0",
     "pypdf2>=3.0.0",
+    "openpyxl>=3.0.0",
 
     # Environment and configuration
     "python-dotenv>=1.0.0",
