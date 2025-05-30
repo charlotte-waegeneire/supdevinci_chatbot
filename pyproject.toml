@@ -31,7 +31,6 @@ keywords = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Education",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -84,6 +83,11 @@ dependencies = [
 "Bug Reports" = "https://github.com/charlotte-waegeneire/supdevinci_chatbot/issues"
 "Source" = "https://github.com/charlotte-waegeneire/supdevinci_chatbot"
 "Documentation" = "https://github.com/charlotte-waegeneire/supdevinci_chatbot/blob/main/README.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["chatbot*"]
+exclude = ["data*", "tests*", "scripts*", "*.egg-info*"]
 
 [project.optional-dependencies]
 dev = [
