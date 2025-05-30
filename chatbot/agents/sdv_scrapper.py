@@ -6,6 +6,10 @@ from urllib.parse import urldefrag, urljoin, urlparse
 from bs4 import BeautifulSoup
 import requests
 
+from chatbot.utils import get_env_variable
+
+_ROOT_DIR = get_env_variable("ROOT_DIR")
+
 
 class WebScraper:
     def __init__(self, base_url: str, max_pages: int = 100):
@@ -167,8 +171,10 @@ class WebScraper:
 
     def run_full_scrape(
         self,
-        md_dir: str = "chatbot/data/website_pages",
-        vector_dir: str = "chatbot/data/vectorstore/supdevinci_web",
+        md_dir: str = os.path.join(_ROOT_DIR, "chatbot/data/website_pages/"),
+        vector_dir: str = os.path.join(
+            _ROOT_DIR, "chatbot/data/vectorstore/supdevinci_web/"
+        ),
     ):
         """Lance le processus complet de scraping."""
         print(f"🚀 Début du scraping de {self.base_url}")

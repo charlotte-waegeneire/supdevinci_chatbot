@@ -11,12 +11,16 @@ from langchain_openai import AzureChatOpenAI
 
 from chatbot.utils import get_env_variable
 
+_ROOT_DIR = get_env_variable("ROOT_DIR")
+
 
 class WebAgent:
     def __init__(
         self,
-        data_folder: str = "chatbot/data/website_pages/",
-        persist_directory: str = "chatbot/data/vectorstore/supdevinci_web/",
+        data_folder: str = os.path.join(_ROOT_DIR, "chatbot/data/website_pages/"),
+        persist_directory: str = os.path.join(
+            _ROOT_DIR, "chatbot/data/vectorstore/supdevinci_web/"
+        ),
         embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
     ) -> None:
         self.data_folder = data_folder
