@@ -6,6 +6,7 @@ from openai import AzureOpenAI
 
 from chatbot.agents.doc_agent import DocAgent
 from chatbot.agents.form_agent import FormAgent
+from chatbot.agents.sdv_scrapper import WebScraper
 from chatbot.agents.web_agent import WebAgent
 from chatbot.utils import get_env_variable
 
@@ -31,6 +32,9 @@ class MainAgent:
             "user_type": None,
             "previous_questions": [],
         }
+
+        self.web_scraper = WebScraper("https://www.supdevinci.fr/", 100)
+        self.web_scraper.run_full_scrape()
 
     def _create_azure_client(self):
         """Create an Azure OpenAI client instance"""
