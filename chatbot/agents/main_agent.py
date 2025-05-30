@@ -124,8 +124,6 @@ class MainAgent:
                 "options",
             ],
             "documentation": [
-                "règlement",
-                "reglement",
                 "brochure",
                 "brochures",
                 "pdf",
